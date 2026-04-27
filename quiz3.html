@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz 3 — Hospitality Concepts & Terminology</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; }
+  .header { background: #1a1a1a; border-bottom: 1px solid #2a2a2a; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 12px; flex-wrap: wrap; }
+  .logo { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+  .logo-accent { color: #10b981; }
+  .back-btn { padding: 7px 14px; border-radius: 16px; border: 1.5px solid #2a2a2a; background: #1a1a1a; color: #aaa; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s; white-space: nowrap; }
+  .back-btn:hover { border-color: #10b981; color: #10b981; }
+  .nav-tabs { display: flex; gap: 8px; }
+  .nav-tab { padding: 7px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; background: #2a2a2a; color: #aaa; }
+  .nav-tab.active { background: #10b981; color: #fff; }
+  .nav-tab:hover:not(.active) { background: #3a3a3a; color: #fff; }
+  .section { display: none; padding: 24px 20px; max-width: 720px; margin: 0 auto; }
+  .section.active { display: block; }
+  .progress-bar { background: #2a2a2a; border-radius: 8px; height: 5px; margin-bottom: 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #10b981; border-radius: 8px; transition: width 0.4s ease; }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 9px 14px; flex: 1; min-width: 80px; text-align: center; }
+  .stat-num { font-size: 18px; font-weight: 700; color: #10b981; }
+  .stat-label { font-size: 10px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .category-badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-bottom: 12px; background: #1a1a2e; color: #10b981; border: 1px solid #2a2a3e; }
+  .question-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .question-num { font-size: 11px; color: #666; margin-bottom: 8px; }
+  .question-text { font-size: 17px; font-weight: 500; line-height: 1.5; color: #f0f0f0; }
+  .options { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
+  .option { padding: 12px 16px; border-radius: 9px; border: 1.5px solid #2a2a2a; cursor: pointer; font-size: 14px; transition: all 0.15s; background: #141414; color: #ddd; text-align: left; }
+  .option:hover:not(.disabled) { border-color: #10b981; background: #1a1020; color: #fff; }
+  .option.correct { border-color: #22c55e; background: #0f2a1a; color: #86efac; }
+  .option.wrong { border-color: #ef4444; background: #2a0f0f; color: #fca5a5; }
+  .option.reveal-correct { border-color: #22c55e; background: #0f2a1a; color: #86efac; }
+  .option.disabled { cursor: default; }
+  .feedback { padding: 12px 16px; border-radius: 9px; margin-top: 10px; font-size: 13px; line-height: 1.5; display: none; }
+  .feedback.correct { background: #0f2a1a; border: 1px solid #22c55e; color: #86efac; }
+  .feedback.wrong { background: #2a0f0f; border: 1px solid #ef4444; color: #fca5a5; }
+  .feedback.show { display: block; }
+  .next-btn { width: 100%; padding: 12px; border-radius: 9px; border: none; cursor: pointer; font-size: 15px; font-weight: 600; background: #10b981; color: #fff; margin-top: 12px; display: none; transition: opacity 0.2s; }
+  .next-btn:hover { opacity: 0.85; }
+  .next-btn.show { display: block; }
+  .nav-btns { display: flex; gap: 10px; margin-top: 10px; }
+  .nav-btn { flex: 1; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #2a2a2a; cursor: pointer; font-size: 13px; font-weight: 500; background: #1a1a1a; color: #aaa; transition: all 0.2s; }
+  .nav-btn:hover:not(:disabled) { border-color: #10b981; color: #10b981; }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .results-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 28px; text-align: center; margin-bottom: 20px; }
+  .results-score { font-size: 60px; font-weight: 800; color: #10b981; }
+  .results-label { font-size: 16px; color: #aaa; margin-top: 6px; }
+  .results-detail { display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .results-stat { background: #141414; border-radius: 9px; padding: 10px 18px; }
+  .results-stat .num { font-size: 22px; font-weight: 700; }
+  .results-stat .lbl { font-size: 11px; color: #888; }
+  .restart-btn { padding: 12px 28px; border-radius: 9px; border: none; cursor: pointer; font-size: 15px; font-weight: 600; background: #10b981; color: #fff; margin: 6px; }
+  .restart-btn.secondary { background: #2a2a2a; color: #ddd; }
+  .restart-btn:hover { opacity: 0.85; }
+  .review-filter { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn { padding: 5px 12px; border-radius: 14px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #aaa; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+  .filter-btn.active { background: #10b981; border-color: #10b981; color: #fff; }
+  .review-item { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 11px; padding: 16px; margin-bottom: 10px; }
+  .review-item .r-cat { font-size: 10px; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .review-item .r-q { font-size: 14px; color: #f0f0f0; font-weight: 500; margin-bottom: 7px; }
+  .review-item .r-a { font-size: 13px; color: #22c55e; display: flex; align-items: flex-start; gap: 5px; }
+  .review-item .r-a::before { content: '✓'; flex-shrink: 0; }
+  .review-item .r-status { font-size: 10px; margin-top: 7px; padding: 2px 7px; border-radius: 7px; display: inline-block; }
+  .r-status.missed { background: #2a0f0f; color: #fca5a5; }
+  .r-status.seen { background: #0f2a1a; color: #86efac; }
+  .r-status.unseen { background: #1a1a2a; color: #aaa; }
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .section-sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .empty-state { text-align: center; padding: 40px; color: #555; font-size: 14px; }
+  @media (max-width: 600px) { .header { padding: 12px; } .section { padding: 16px 14px; } .question-text { font-size: 15px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← All Quizzes</a>
+  <div class="logo"><span class="logo-accent">🏨</span> Concepts & Terminology</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('quiz',this)">Quiz</button>
+    <button class="nav-tab" onclick="showSection('review',this)">Review</button>
+  </div>
+</div>
+
+<div id="quiz" class="section active">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="stat-answered">0</div><div class="stat-label">Answered</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">Correct</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-missed">0</div><div class="stat-label">Retry</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Left</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div id="quiz-content"></div>
+</div>
+
+<div id="review" class="section">
+  <div class="section-title">Review Answers</div>
+  <div class="section-sub">27 questions — The vocabulary of the hospitality industry</div>
+  <div class="review-filter">
+    <button class="filter-btn active" onclick="filterReview('all',this)">All</button>
+    <button class="filter-btn" onclick="filterReview('missed',this)">Missed</button>
+    <button class="filter-btn" onclick="filterReview('correct',this)">Got Right</button>
+    <button class="filter-btn" onclick="filterReview('unseen',this)">Not Seen</button>
+  </div>
+  <div id="review-list"></div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {
+    id: 13, category: "Key Terminology",
+    q: "What does RevPAG stand for?",
+    options: ["Revenue Per Available Guest", "Revenue Per Available Group", "Revenue Per Accrued Guest", "Revenue Per Agency Gross"],
+    answer: 0,
+    explanation: "RevPAG = Revenue Per Available Guest. Mews encourages hoteliers to shift from RevPAR (per room) to RevPAG (per guest) to unlock broader revenue potential."
+  },
+  {
+    id: 14, category: "Key Terminology",
+    q: "What does RevPAR stand for?",
+    options: ["Revenue Per Available Rate", "Revenue Per Available Room", "Revenue Per Ancillary Receipt", "Revenue Per Approved Reservation"],
+    answer: 1,
+    explanation: "RevPAR = Revenue Per Available Room. It's a traditional hospitality metric, but Mews argues hotels should evolve toward RevPAG thinking."
+  },
+  {
+    id: 15, category: "Key Terminology",
+    q: "What does ADR stand for in hospitality?",
+    options: ["Average Daily Rate", "Automated Distribution Rate", "Annual Demand Ratio", "Adjusted Distribution Revenue"],
+    answer: 0,
+    explanation: "ADR = Average Daily Rate. Along with occupancy and RevPAR, it's one of the core room revenue metrics."
+  },
+  {
+    id: 16, category: "Key Terminology",
+    q: "What does PMS stand for?",
+    options: ["Property Maintenance System", "Property Management System", "Platform Management Software", "Pricing & Marketing Suite"],
+    answer: 1,
+    explanation: "PMS = Property Management System. It manages reservations, check-in/out, payments, rates and day-to-day hotel operations in one system."
+  },
+  {
+    id: 17, category: "Key Terminology",
+    q: "What does GDS stand for?",
+    options: ["Global Distribution System", "Guest Data Service", "General Demand Solution", "Group Distribution Server"],
+    answer: 0,
+    explanation: "GDS = Global Distribution System. It connects hotels to travel agents and booking networks, distributing real-time rates and availability."
+  },
+  {
+    id: 18, category: "Key Terminology",
+    q: "What does POS stand for?",
+    options: ["Platform Operations Suite", "Point of Sale", "Property Operations System", "Pricing Optimization Software"],
+    answer: 1,
+    explanation: "POS = Point of Sale. It's the system used to manage food & beverage and retail transactions within the hotel."
+  },
+  {
+    id: 19, category: "Key Terminology",
+    q: "What does RMS stand for in a hotel tech context?",
+    options: ["Reservation Management System", "Revenue Management System", "Room Maintenance Suite", "Rate Monitoring Service"],
+    answer: 1,
+    explanation: "RMS = Revenue Management System. It helps hotels set optimal pricing based on demand, market trends and historical data."
+  },
+  {
+    id: 20, category: "Key Terminology",
+    q: "What does CRS stand for?",
+    options: ["Channel Rate System", "Central Reservation System", "Customer Relationship Suite", "Cloud Revenue Solution"],
+    answer: 1,
+    explanation: "CRS = Central Reservation System. It manages room availability and rates, then relays this information to distribution channels including GDS platforms."
+  },
+  {
+    id: 21, category: "Key Terminology",
+    q: "What does OTA stand for?",
+    options: ["Online Travel Agency", "Optimized Transaction Architecture", "Open Technology API", "Outbound Travel Agent"],
+    answer: 0,
+    explanation: "OTA = Online Travel Agency (e.g. Booking.com, Expedia). Hotels use OTAs as distribution channels but must balance OTA costs vs. direct bookings."
+  },
+  {
+    id: 22, category: "Key Terminology",
+    q: "What does GOPPAR stand for?",
+    options: ["Gross Operating Profit Per Available Room", "General Operating Period Per Average Rate", "Gross Output Productivity Per Asset Return", "Group Operations Profit Per Available Revenue"],
+    answer: 0,
+    explanation: "GOPPAR = Gross Operating Profit Per Available Room. In Mews's multi-agent AI context, it's cited as the 'north star' metric for hierarchical goal alignment."
+  },
+  {
+    id: 23, category: "Key Terminology",
+    q: "What is 'bleisure' travel?",
+    options: ["Business travel only", "Luxury travel segment", "A blend of business and leisure travel", "Budget leisure travel"],
+    answer: 2,
+    explanation: "Bleisure = a blend of business and leisure travel. Bleisure travelers spend 102% more on-property than leisure travelers, driven by longer stays."
+  },
+  {
+    id: 24, category: "Key Terminology",
+    q: "What is F&B in hotel terminology?",
+    options: ["Finance & Billing", "Food & Beverage", "Front & Back office", "Facilities & Buildings"],
+    answer: 1,
+    explanation: "F&B = Food & Beverage. It's one of the most common ancillary revenue streams and the most upsold product category in Mews data."
+  },
+  {
+    id: 25, category: "Key Terminology",
+    q: "What does 'ancillary revenue' mean for a hotel?",
+    options: ["Revenue from room bookings only", "Revenue from non-room services and products", "Revenue from cancellation fees", "Revenue from franchise agreements"],
+    answer: 1,
+    explanation: "Ancillary revenue refers to income generated beyond room bookings — from services like F&B, spa, parking, co-working, tours, etc."
+  },
+
+  // ── MEWS PRODUCTS ──────────────────────────────────────────────────────────,
+  {
+    id: 81, category: "Hospitality Concepts",
+    q: "What is 'dynamic pricing' in hotel revenue management?",
+    options: ["Showing different prices to different guests simultaneously", "Adjusting room rates in real time based on demand, market conditions and historical data", "Pricing rooms based on the day of the week only", "Matching competitor prices exactly"],
+    answer: 1,
+    explanation: "Dynamic pricing involves adjusting room rates in real time based on occupancy forecasts, demand signals, market trends and historical data. Machine learning enhances this through tools like Atomize."
+  },
+  {
+    id: 201, category: "Hospitality Concepts & Terminology",
+    q: "What is occupancy rate and how is it calculated?",
+    options: ["The percentage of staff on duty at any time", "The percentage of available rooms that are actually occupied — (Rooms Occupied / Rooms Available) x 100", "The ratio of bookings to cancellations", "The average number of guests per room"],
+    answer: 1,
+    explanation: "Occupancy rate = (Rooms Occupied / Rooms Available) x 100. One of the three core hotel KPIs alongside ADR and RevPAR. RevPAR itself = Occupancy Rate x ADR."
+  },
+  {
+    id: 202, category: "Hospitality Concepts & Terminology",
+    q: "What is TRevPAR and how does it differ from RevPAR?",
+    options: ["They are the same metric", "TRevPAR = Total Revenue Per Available Room — includes ALL hotel revenue (rooms, F&B, spa, parking etc.), not just rooms", "TRevPAR measures revenue per available staff member", "TRevPAR only counts direct booking revenue"],
+    answer: 1,
+    explanation: "TRevPAR = Total Revenue Per Available Room. Unlike RevPAR (rooms only), TRevPAR captures the full revenue picture. It aligns directly with Mews's RevPAG philosophy of thinking beyond the room."
+  },
+  {
+    id: 203, category: "Hospitality Concepts & Terminology",
+    q: "What is yield management in hotels?",
+    options: ["Managing hotel staff rotas efficiently", "The practice of adjusting prices and availability in real time to maximise revenue from a fixed inventory — selling the right room to the right guest at the right price", "A method of reducing energy consumption", "Managing supplier contracts to get better prices"],
+    answer: 1,
+    explanation: "Yield management (revenue management) optimises prices and availability dynamically. Hotels have fixed room inventory — yield management maximises what each room earns based on demand, timing, and guest segment."
+  },
+  {
+    id: 204, category: "Hospitality Concepts & Terminology",
+    q: "What is rate parity and why is it relevant to hotels using OTAs?",
+    options: ["Ensuring all room types are priced equally", "Maintaining the same room price across all distribution channels (OTAs, GDS, direct) — often contractually required by OTAs", "A pricing strategy that matches competitor rates exactly", "The ratio of rack rate to discounted rate"],
+    answer: 1,
+    explanation: "Rate parity means charging the same price on Booking.com, Expedia, and the hotel's own website. OTAs often require this contractually. It prevents hotels offering lower direct rates — which is why many hotels now use best rate guarantee strategies."
+  },
+  {
+    id: 205, category: "Hospitality Concepts & Terminology",
+    q: "What is the difference between rack rate and best available rate (BAR)?",
+    options: ["They are the same thing", "Rack rate is the full published price with no discounts; BAR is the lowest rate at any given moment, adjusted dynamically based on demand", "Rack rate is for walk-ins only; BAR is for advance bookings", "BAR is always higher than rack rate"],
+    answer: 1,
+    explanation: "Rack rate = full undiscounted published price. BAR (Best Available Rate) = lowest rate available at a given time, varying with demand. Most revenue management focuses on optimising BAR."
+  },
+  {
+    id: 206, category: "Hospitality Concepts & Terminology",
+    q: "What is a channel manager in hotel distribution?",
+    options: ["A hotel staff member who manages OTA relationships", "Software that automatically synchronises room availability, rates and restrictions across all distribution channels simultaneously — preventing overbookings", "A manager who oversees all hotel sales channels", "A reporting tool for tracking bookings by source"],
+    answer: 1,
+    explanation: "A channel manager connects a hotel's inventory system to all distribution channels (OTAs, GDS, direct) in real time. When a room is booked anywhere, availability updates everywhere instantly — eliminating double bookings and manual updates."
+  },
+  {
+    id: 207, category: "Hospitality Concepts & Terminology",
+    q: "What is net rate vs gross rate in hotel distribution?",
+    options: ["They are the same price expressed differently", "Net rate is what the hotel receives after OTA commission; gross rate is the full price the guest pays — the difference is the distribution cost", "Net rate is for domestic guests; gross rate is for international", "Net rate applies to direct bookings only"],
+    answer: 1,
+    explanation: "Gross rate = what the guest pays. Net rate = what the hotel keeps after OTA or travel agent commission (typically 15-25%). Understanding this gap is crucial for accurate revenue analysis."
+  },
+  {
+    id: 208, category: "Hospitality Concepts & Terminology",
+    q: "What is a no-show and why does it matter for hotel revenue management?",
+    options: ["A guest who checks in but uses no services", "A reservation where the guest does not arrive without cancelling — hotels typically charge a no-show fee, and the revenue attribution affects how metrics are calculated", "A room that is available but not listed online", "A booking made and immediately cancelled"],
+    answer: 1,
+    explanation: "A no-show is when a booked guest does not arrive and does not cancel. This is precisely the revenue attribution scenario Mews's semantic layer example addresses — does no-show revenue count as room revenue or cancellation revenue?"
+  },
+  {
+    id: 209, category: "Hospitality Concepts & Terminology",
+    q: "What is GOP in hotel financial reporting?",
+    options: ["Guest Operations Performance — a staff efficiency metric", "Gross Operating Profit — total hotel revenue minus all operating expenses before management fees, rent and taxes", "Group Occupancy Percentage — a measure of group bookings", "General Operations Policy — the hotel standard procedures document"],
+    answer: 1,
+    explanation: "GOP = Gross Operating Profit. Total revenue minus all departmental and undistributed operating expenses. GOPPAR (GOP per available room) is the north-star metric Mews uses to align AI agent goals."
+  },
+  {
+    id: 210, category: "Hospitality Concepts & Terminology",
+    q: "What is a PIP in the hotel industry?",
+    options: ["Property Improvement Plan — a franchise-required plan outlining renovations a hotel must complete to meet brand standards", "Product Integration Protocol — a tech standard for connecting systems", "Pricing Intelligence Platform — a revenue management tool", "Property Inspection Process — the annual safety review"],
+    answer: 0,
+    explanation: "PIP = Property Improvement Plan. Franchised hotels are required by brands (Marriott, Hilton etc.) to complete specific renovations. PIPs are expensive and operationally disruptive — context for why hotels sometimes resist technology migrations on top of everything else."
+  },
+  {
+    id: 211, category: "Hospitality Concepts & Terminology",
+    q: "What does RevPAR index (RGI) measure?",
+    options: ["A hotel's revenue per room divided by its average room size", "How a hotel's RevPAR compares to a competitive set — above 100 means outperforming competitors", "The percentage growth in RevPAR year over year", "The ratio of RevPAR to TRevPAR"],
+    answer: 1,
+    explanation: "RevPAR Index (RGI) compares a hotel's RevPAR to the average of a defined competitor set. Above 100 = winning market share. Below 100 = underperforming. A key benchmarking tool in revenue management."
+  },
+  {
+    id: 212, category: "Hospitality Concepts & Terminology",
+    q: "What is the difference between upselling and cross-selling in a hotel context?",
+    options: ["They mean the same thing", "Upselling is encouraging a guest to upgrade to a higher category (standard to suite); cross-selling is selling additional different products (spa, parking, F&B) to the same guest", "Upselling is only done at check-in; cross-selling is done online only", "Cross-selling only applies to group bookings"],
+    answer: 1,
+    explanation: "Upselling = moving the guest to a higher-value version of what they already bought (room upgrade). Cross-selling = selling something additional and different (breakfast, parking, spa). Both are key revenue drivers — Mews tools support both across the full guest journey."
+  },
+  {
+    id: 213, category: "Hospitality Concepts & Terminology",
+    q: "What does direct booking mean and why do hotels prefer it over OTA bookings?",
+    options: ["A booking made by a guest walking directly into the hotel", "A booking made through the hotel's own website, phone or app — with no OTA commission, giving higher net revenue and full guest data ownership", "A group booking made directly with the sales team", "A booking confirmed without a credit card guarantee"],
+    answer: 1,
+    explanation: "Direct bookings come without OTA commission (typically 15-25%), so the hotel keeps more revenue. The hotel also gets full guest data for personalization and loyalty building — vs OTA bookings where guest data is often withheld."
+  }
+];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let queue = [];        // ids not yet shown this round
+let missedIds = [];    // ids answered wrong — will be re-queued
+let correctIds = [];   // ids answered correctly
+let seenIds = [];      // ids answered at least once (drives "Answered" counter)
+let currentQ = null;   // the live question currently on screen
+let answered = false;  // whether the live question has been answered
+let history = [];      // [{q, answeredIdx}] — every question shown so far
+let histPos = -1;      // index into history when browsing back; -1 = live
+
+function initQueue() { queue = shuffle([...ALL_QUESTIONS.map(q => q.id)]); }
+function shuffle(a) { for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function getQ(id) { return ALL_QUESTIONS.find(q => q.id === id); }
+
+// ── Core quiz flow ─────────────────────────────────────────────────────────
+function nextQuestion() {
+  if (histPos !== -1) {
+    // User is browsing history and clicked Next Question — jump back to live
+    histPos = -1;
+    renderLive();
+    return;
+  }
+  if (queue.length === 0 && missedIds.length > 0) {
+    queue = shuffle([...missedIds]);
+    missedIds = [];
+    showRoundComplete();
+    return;
+  }
+  if (queue.length === 0 && missedIds.length === 0) {
+    showFinalResult();
+    return;
+  }
+  const id = queue.shift();
+  currentQ = getQ(id);
+  answered = false;
+  history.push({ q: currentQ, answeredIdx: null });
+  histPos = -1;
+  renderLive();
+  updateStats();
+}
+
+// Render the live (current) question — interactive if not yet answered
+function renderLive() {
+  render(currentQ, answered, answered ? history[history.length-1].answeredIdx : null, true);
+  updateStats();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+// isLive: true = this is the current question (show Next btn if answered)
+// readonly: show answered state but no clickable options
+function render(q, readonly, selectedIdx, isLive) {
+  const atStart  = (histPos === -1 && history.length <= 1) || histPos === 0;
+  const atLive   = histPos === -1;
+
+  const optionsHtml = q.options.map((opt, i) => {
+    let cls = '';
+    if (readonly && selectedIdx !== null && selectedIdx !== undefined) {
+      if (i === selectedIdx && selectedIdx === q.answer) cls = 'correct disabled';
+      else if (i === selectedIdx && selectedIdx !== q.answer) cls = 'wrong disabled';
+      else if (i === q.answer) cls = 'reveal-correct disabled';
+      else cls = 'disabled';
+    }
+    const click = (!readonly) ? `onclick="selectAnswer(${i})"` : '';
+    return `<button class="option ${cls}" ${click}>${opt}</button>`;
+  }).join('');
+
+  const feedbackHtml = (readonly && selectedIdx !== null && selectedIdx !== undefined)
+    ? `<div class="feedback ${selectedIdx === q.answer ? 'correct' : 'wrong'} show">
+         <strong>${selectedIdx === q.answer ? '✓ Correct!' : '✗ Not quite.'}</strong> ${q.explanation}
+       </div>`
+    : `<div class="feedback" id="feedback"></div>`;
+
+  const nextBtnHtml = (isLive && readonly)
+    ? `<button class="next-btn show" onclick="nextQuestion()">Next Question →</button>`
+    : '';
+
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="category-badge">${q.category}</div>
+    <div class="question-card">
+      <div class="question-num">Question #${q.id}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">${optionsHtml}</div>
+      ${feedbackHtml}
+      ${nextBtnHtml}
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goPrev()" ${atStart ? 'disabled' : ''}>← Previous</button>
+      <button class="nav-btn" onclick="goNext()" ${atLive ? 'disabled' : ''}>Next →</button>
+    </div>`;
+}
+
+// ── Answer selection ───────────────────────────────────────────────────────
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  if (!seenIds.includes(currentQ.id)) seenIds.push(currentQ.id);
+
+  const q = currentQ;
+  document.querySelectorAll('.option').forEach(o => o.classList.add('disabled'));
+  const fb = document.getElementById('feedback');
+  const nb = document.getElementById('next-btn');  // may not exist yet
+
+  if (idx === q.answer) {
+    document.querySelectorAll('.option')[idx].classList.add('correct');
+    fb.className = 'feedback correct show';
+    fb.innerHTML = `<strong>✓ Correct!</strong> ${q.explanation}`;
+    if (!correctIds.includes(q.id)) correctIds.push(q.id);
+    missedIds = missedIds.filter(id => id !== q.id);
+  } else {
+    document.querySelectorAll('.option')[idx].classList.add('wrong');
+    document.querySelectorAll('.option')[q.answer].classList.add('reveal-correct');
+    fb.className = 'feedback wrong show';
+    fb.innerHTML = `<strong>✗ Not quite.</strong> ${q.explanation}`;
+    if (!missedIds.includes(q.id)) missedIds.push(q.id);
+    correctIds = correctIds.filter(id => id !== q.id);
+  }
+
+  // Record answer in history
+  history[history.length - 1].answeredIdx = idx;
+
+  // Show Next button
+  if (nb) {
+    nb.classList.add('show');
+  } else {
+    // Re-render live to get the Next button to appear
+    renderLive();
+  }
+  updateStats();
+}
+
+// ── Prev / Next navigation ─────────────────────────────────────────────────
+function goPrev() {
+  // Determine where we currently are
+  const curIdx = (histPos === -1) ? history.length - 1 : histPos;
+  if (curIdx <= 0) return; // already at first question
+
+  histPos = curIdx - 1;
+  const entry = history[histPos];
+  const isLive = false; // browsing history — never "live"
+  render(entry.q, entry.answeredIdx !== null, entry.answeredIdx, isLive);
+}
+
+function goNext() {
+  if (histPos === -1) return; // already at live question
+
+  const liveIdx = history.length - 1;
+
+  if (histPos >= liveIdx) {
+    // Step back to live
+    histPos = -1;
+    renderLive();
+    return;
+  }
+
+  histPos++;
+  const entry = history[histPos];
+  const nowAtLive = (histPos === liveIdx);
+
+  if (nowAtLive) {
+    histPos = -1; // snap back to live mode
+    renderLive();
+  } else {
+    render(entry.q, entry.answeredIdx !== null, entry.answeredIdx, false);
+  }
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-answered').textContent = seenIds.length;
+  document.getElementById('stat-correct').textContent  = correctIds.length;
+  document.getElementById('stat-missed').textContent   = missedIds.length;
+  document.getElementById('stat-total').textContent    = ALL_QUESTIONS.length - seenIds.length;
+  const pct = ALL_QUESTIONS.length > 0 ? (seenIds.length / ALL_QUESTIONS.length * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+// ── Round complete / final result ─────────────────────────────────────────
+function showRoundComplete() {
+  const pct = Math.round((correctIds.length / seenIds.length) * 100) || 0;
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="results-card">
+      <div class="results-score">${pct}%</div>
+      <div class="results-label">Round Complete!</div>
+      <p style="color:#aaa;margin-top:10px;font-size:13px;">All questions seen once.<br>Now drilling what you missed!</p>
+      <div class="results-detail">
+        <div class="results-stat"><div class="num" style="color:#22c55e">${correctIds.length}</div><div class="lbl">Correct</div></div>
+        <div class="results-stat"><div class="num" style="color:#ef4444">${missedIds.length}</div><div class="lbl">Missed</div></div>
+      </div><br>
+      <button class="restart-btn" onclick="nextQuestion()">Retry Missed →</button>
+    </div>`;
+  updateStats();
+}
+
+function showFinalResult() {
+  const pct = Math.round((correctIds.length / ALL_QUESTIONS.length) * 100) || 0;
+  const msg = pct===100 ? "🏆 Perfect!" : pct>=80 ? "🎉 Excellent!" : pct>=60 ? "👍 Good progress!" : "📚 Keep studying!";
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="results-card">
+      <div class="results-score">${pct}%</div>
+      <div class="results-label">${msg}</div>
+      <div class="results-detail">
+        <div class="results-stat"><div class="num" style="color:#22c55e">${correctIds.length}</div><div class="lbl">Correct</div></div>
+        <div class="results-stat"><div class="num" style="color:#ef4444">${ALL_QUESTIONS.length - correctIds.length}</div><div class="lbl">Missed</div></div>
+        <div class="results-stat"><div class="num">${ALL_QUESTIONS.length}</div><div class="lbl">Total</div></div>
+      </div><br>
+      <button class="restart-btn" onclick="restartQuiz()">Start Fresh</button>
+      <button class="restart-btn secondary" onclick="showSection('review', document.querySelectorAll('.nav-tab')[1])">View Answers</button>
+    </div>`;
+}
+
+function restartQuiz() {
+  queue=[]; missedIds=[]; correctIds=[]; seenIds=[];
+  currentQ=null; answered=false; history=[]; histPos=-1;
+  initQueue(); nextQuestion();
+}
+
+// ── Section switching ──────────────────────────────────────────────────────
+let currentFilter = 'all';
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'review') renderReview(currentFilter);
+}
+
+function filterReview(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReview(filter);
+}
+
+function renderReview(filter) {
+  let qs = ALL_QUESTIONS;
+  if (filter === 'missed')  qs = ALL_QUESTIONS.filter(q => missedIds.includes(q.id));
+  if (filter === 'correct') qs = ALL_QUESTIONS.filter(q => correctIds.includes(q.id));
+  if (filter === 'unseen')  qs = ALL_QUESTIONS.filter(q => !seenIds.includes(q.id));
+  const list = document.getElementById('review-list');
+  if (qs.length === 0) { list.innerHTML = '<div class="empty-state">No questions in this filter yet.</div>'; return; }
+  list.innerHTML = qs.map(q => {
+    let lbl = 'Not yet seen', cls = 'unseen';
+    if (correctIds.includes(q.id)) { lbl = '✓ Got it right'; cls = 'seen'; }
+    else if (missedIds.includes(q.id)) { lbl = '✗ Needs review'; cls = 'missed'; }
+    else if (seenIds.includes(q.id)) { lbl = 'Seen'; cls = 'seen'; }
+    return `<div class="review-item"><div class="r-cat">${q.category}</div><div class="r-q">${q.q}</div><div class="r-a">${q.options[q.answer]}</div><div class="r-status ${cls}">${lbl}</div></div>`;
+  }).join('');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+initQueue();
+nextQuestion();
+</script>
+</body>
+</html>
