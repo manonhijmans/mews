@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz 1 — Mews: The Company</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; }
+  .header { background: #1a1a1a; border-bottom: 1px solid #2a2a2a; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 12px; flex-wrap: wrap; }
+  .logo { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+  .logo-accent { color: #e85d9a; }
+  .back-btn { padding: 7px 14px; border-radius: 16px; border: 1.5px solid #2a2a2a; background: #1a1a1a; color: #aaa; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s; white-space: nowrap; }
+  .back-btn:hover { border-color: #e85d9a; color: #e85d9a; }
+  .nav-tabs { display: flex; gap: 8px; }
+  .nav-tab { padding: 7px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; background: #2a2a2a; color: #aaa; }
+  .nav-tab.active { background: #e85d9a; color: #fff; }
+  .nav-tab:hover:not(.active) { background: #3a3a3a; color: #fff; }
+  .section { display: none; padding: 24px 20px; max-width: 720px; margin: 0 auto; }
+  .section.active { display: block; }
+  .progress-bar { background: #2a2a2a; border-radius: 8px; height: 5px; margin-bottom: 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #e85d9a; border-radius: 8px; transition: width 0.4s ease; }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 9px 14px; flex: 1; min-width: 80px; text-align: center; }
+  .stat-num { font-size: 18px; font-weight: 700; color: #e85d9a; }
+  .stat-label { font-size: 10px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .category-badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-bottom: 12px; background: #1a1a2e; color: #e85d9a; border: 1px solid #2a2a3e; }
+  .question-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .question-num { font-size: 11px; color: #666; margin-bottom: 8px; }
+  .question-text { font-size: 17px; font-weight: 500; line-height: 1.5; color: #f0f0f0; }
+  .options { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
+  .option { padding: 12px 16px; border-radius: 9px; border: 1.5px solid #2a2a2a; cursor: pointer; font-size: 14px; transition: all 0.15s; background: #141414; color: #ddd; text-align: left; }
+  .option:hover:not(.disabled) { border-color: #e85d9a; background: #1a1020; color: #fff; }
+  .option.correct { border-color: #22c55e; background: #0f2a1a; color: #86efac; }
+  .option.wrong { border-color: #ef4444; background: #2a0f0f; color: #fca5a5; }
+  .option.reveal-correct { border-color: #22c55e; background: #0f2a1a; color: #86efac; }
+  .option.disabled { cursor: default; }
+  .feedback { padding: 12px 16px; border-radius: 9px; margin-top: 10px; font-size: 13px; line-height: 1.5; display: none; }
+  .feedback.correct { background: #0f2a1a; border: 1px solid #22c55e; color: #86efac; }
+  .feedback.wrong { background: #2a0f0f; border: 1px solid #ef4444; color: #fca5a5; }
+  .feedback.show { display: block; }
+  .next-btn { width: 100%; padding: 12px; border-radius: 9px; border: none; cursor: pointer; font-size: 15px; font-weight: 600; background: #e85d9a; color: #fff; margin-top: 12px; display: none; transition: opacity 0.2s; }
+  .next-btn:hover { opacity: 0.85; }
+  .next-btn.show { display: block; }
+  .nav-btns { display: flex; gap: 10px; margin-top: 10px; }
+  .nav-btn { flex: 1; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #2a2a2a; cursor: pointer; font-size: 13px; font-weight: 500; background: #1a1a1a; color: #aaa; transition: all 0.2s; }
+  .nav-btn:hover:not(:disabled) { border-color: #e85d9a; color: #e85d9a; }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .results-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 28px; text-align: center; margin-bottom: 20px; }
+  .results-score { font-size: 60px; font-weight: 800; color: #e85d9a; }
+  .results-label { font-size: 16px; color: #aaa; margin-top: 6px; }
+  .results-detail { display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .results-stat { background: #141414; border-radius: 9px; padding: 10px 18px; }
+  .results-stat .num { font-size: 22px; font-weight: 700; }
+  .results-stat .lbl { font-size: 11px; color: #888; }
+  .restart-btn { padding: 12px 28px; border-radius: 9px; border: none; cursor: pointer; font-size: 15px; font-weight: 600; background: #e85d9a; color: #fff; margin: 6px; }
+  .restart-btn.secondary { background: #2a2a2a; color: #ddd; }
+  .restart-btn:hover { opacity: 0.85; }
+  .review-filter { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn { padding: 5px 12px; border-radius: 14px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #aaa; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+  .filter-btn.active { background: #e85d9a; border-color: #e85d9a; color: #fff; }
+  .review-item { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 11px; padding: 16px; margin-bottom: 10px; }
+  .review-item .r-cat { font-size: 10px; color: #e85d9a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .review-item .r-q { font-size: 14px; color: #f0f0f0; font-weight: 500; margin-bottom: 7px; }
+  .review-item .r-a { font-size: 13px; color: #22c55e; display: flex; align-items: flex-start; gap: 5px; }
+  .review-item .r-a::before { content: '✓'; flex-shrink: 0; }
+  .review-item .r-status { font-size: 10px; margin-top: 7px; padding: 2px 7px; border-radius: 7px; display: inline-block; }
+  .r-status.missed { background: #2a0f0f; color: #fca5a5; }
+  .r-status.seen { background: #0f2a1a; color: #86efac; }
+  .r-status.unseen { background: #1a1a2a; color: #aaa; }
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .section-sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .empty-state { text-align: center; padding: 40px; color: #555; font-size: 14px; }
+  @media (max-width: 600px) { .header { padding: 12px; } .section { padding: 16px 14px; } .question-text { font-size: 15px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← All Quizzes</a>
+  <div class="logo"><span class="logo-accent">🏢</span> Mews: The Company</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('quiz',this)">Quiz</button>
+    <button class="nav-tab" onclick="showSection('review',this)">Review</button>
+  </div>
+</div>
+
+<div id="quiz" class="section active">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="stat-answered">0</div><div class="stat-label">Answered</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">Correct</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-missed">0</div><div class="stat-label">Retry</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Left</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div id="quiz-content"></div>
+</div>
+
+<div id="review" class="section">
+  <div class="section-title">Review Answers</div>
+  <div class="section-sub">23 questions — Mission, growth, funding & key metrics</div>
+  <div class="review-filter">
+    <button class="filter-btn active" onclick="filterReview('all',this)">All</button>
+    <button class="filter-btn" onclick="filterReview('missed',this)">Missed</button>
+    <button class="filter-btn" onclick="filterReview('correct',this)">Got Right</button>
+    <button class="filter-btn" onclick="filterReview('unseen',this)">Not Seen</button>
+  </div>
+  <div id="review-list"></div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {
+    id: 1, category: "Company & Mission",
+    q: "What is Mews's guiding mission statement?",
+    options: ["To be the world's leading hotel software company", "To make the world a more hospitable place", "To digitize every hotel by 2030", "To replace traditional PMS systems"],
+    answer: 1,
+    explanation: "Mews's guiding vision is 'to make the world a more hospitable place' — by letting technology handle admin and workflows so there's more space for human connection."
+  },
+  {
+    id: 2, category: "Company & Mission",
+    q: "In which city and year was Mews founded?",
+    options: ["Amsterdam, 2010", "Prague, 2012", "London, 2015", "Berlin, 2013"],
+    answer: 1,
+    explanation: "Mews started transforming hospitality in 2012, beginning in a single hotel in Prague."
+  },
+  {
+    id: 3, category: "Company & Mission",
+    q: "How many customers does Mews serve globally?",
+    options: ["Over 5,000", "Over 8,000", "Over 12,500", "Over 20,000"],
+    answer: 2,
+    explanation: "Mews has over 12,500 customers, ranging from global hospitality brands to independent properties."
+  },
+  {
+    id: 4, category: "Company & Mission",
+    q: "How does Mews describe itself beyond being a PMS?",
+    options: ["A revenue management platform", "A connected hospitality cloud", "A distribution network for hotels", "A guest experience app"],
+    answer: 1,
+    explanation: "Mews describes itself as 'a connected hospitality cloud with products and partners across the hotel ecosystem' — not simply a PMS."
+  },
+  {
+    id: 5, category: "Company & Mission",
+    q: "What is Mews's core philosophy for AI, summarized in five words?",
+    options: ["Automate everything as fast as possible", "Less screen time, more face time", "AI first, humans second always", "Data driven, guest obsessed always"],
+    answer: 1,
+    explanation: "Mews's AI philosophy is captured as 'less screen time, more face time' — technology handles admin so staff can focus on guests."
+  },
+
+  // ── KEY METRICS & IDC STUDY ────────────────────────────────────────────────,
+  {
+    id: 6, category: "Key Metrics",
+    q: "According to the IDC Business Value study, what was the average 3-year ROI for Mews customers?",
+    options: ["276%", "376%", "476%", "576%"],
+    answer: 2,
+    explanation: "The IDC study found a 476% three-year ROI for hotels using Mews, with payback typically in around four months."
+  },
+  {
+    id: 7, category: "Key Metrics",
+    q: "What average annual benefit did the IDC study find for each organization using Mews?",
+    options: ["€500k", "€1.1m", "€2.3m", "€750k"],
+    answer: 1,
+    explanation: "IDC found €1.1m in annual benefits for each organization on average."
+  },
+  {
+    id: 8, category: "Key Metrics",
+    q: "What revenue growth figure did the IDC study attribute to Mews?",
+    options: ["5.2%", "6.9%", "8.7%", "11.3%"],
+    answer: 2,
+    explanation: "Hotels interviewed in the IDC study reported 8.7% revenue growth on average."
+  },
+  {
+    id: 9, category: "Key Metrics",
+    q: "By how much did hotels update their room rates more frequently after adopting Mews with Atomize?",
+    options: ["2.1x more frequently", "3.7x more frequently", "5.2x more frequently", "8x more frequently"],
+    answer: 2,
+    explanation: "Hotels updated their room rates 5.2 times more frequently on average, helping them capture demand opportunities in real time."
+  },
+  {
+    id: 10, category: "Key Metrics",
+    q: "What improvement in revenue forecasting accuracy did the IDC study find with Mews?",
+    options: ["15% more accurate", "25% more accurate", "35% more accurate", "50% more accurate"],
+    answer: 2,
+    explanation: "Hotels achieved 35% more accurate revenue forecasting after adopting the Mews platform."
+  },
+  {
+    id: 11, category: "Key Metrics",
+    q: "What efficiency gain for pricing and forecasting staff did the IDC study highlight?",
+    options: ["25% more efficient", "45% more efficient", "65% more efficient", "80% more efficient"],
+    answer: 2,
+    explanation: "The study found 65% increased efficiency for pricing and forecasting staff, dramatically reducing time on routine tasks."
+  },
+  {
+    id: 12, category: "Key Metrics",
+    q: "What average RevPAR increase did hotels in the IDC study see?",
+    options: ["$3.1 increase", "$6.7 increase", "$9.3 increase", "$12.8 increase"],
+    answer: 2,
+    explanation: "Hotels saw an average $9.3 RevPAR increase, showing how better pricing decisions translate into real performance gains."
+  },
+
+  // ── TERMINOLOGY ────────────────────────────────────────────────────────────,
+  {
+    id: 101, category: "Mews Growth & Funding",
+    q: "How much did Mews raise in its January 2026 funding round, and at what valuation?",
+    options: ["$110M at $1.2B", "$200M at $2.0B", "$300M at $2.5B", "$400M at $3.0B"],
+    answer: 2,
+    explanation: "In January 2026 Mews secured $300 million in funding led by EQT Growth, valuing the company at $2.5 billion — its latest and largest funding round to date."
+  },
+  {
+    id: 102, category: "Mews Growth & Funding",
+    q: "Who are the co-founders of Mews?",
+    options: ["Matt Welle and Richard Valtr", "Richard Valtr and Josef Starýchfojtů", "Matt Welle and Manisha Athukorala", "Richard Valtr and Adam Hollander"],
+    answer: 0,
+    explanation: "Mews was founded in 2012 by Matt Welle (CEO) and Richard Valtr. Matt has led the company since 2012 after joining the Mews adventure from hotel operations."
+  },
+  {
+    id: 103, category: "Mews Growth & Funding",
+    q: "What revenue milestone did Mews reach in 2024?",
+    options: ["$50M", "$100M", "$150M", "$200M"],
+    answer: 3,
+    explanation: "Mews reached $200M in revenue in 2024, up from just $16.5M in 2021 — a massive growth trajectory reflecting its rapid expansion."
+  },
+  {
+    id: 104, category: "Mews Growth & Funding",
+    q: "What was Mews's MRR growth rate between November 2023 and November 2024?",
+    options: ["21% growth", "31% growth", "41% growth", "51% growth"],
+    answer: 3,
+    explanation: "Mews's monthly recurring revenue (MRR) rose by 51% from November 2023 to November 2024 — one of the standout metrics from their 2024 year in review."
+  },
+  {
+    id: 105, category: "Mews Growth & Funding",
+    q: "How many customers did Mews have as of the 2026 funding announcement?",
+    options: ["10,000 customers", "12,500 customers", "15,000 customers", "20,000 customers"],
+    answer: 2,
+    explanation: "By the time of the $300M funding round in early 2026, Mews powered 15,000 customers across 85 countries."
+  },
+  {
+    id: 106, category: "Mews Growth & Funding",
+    q: "How many checked-in reservations did Mews handle in 2025?",
+    options: ["12 million", "25 million", "42.3 million", "60 million"],
+    answer: 2,
+    explanation: "In 2025, the Mews platform handled 42.3 million checked-in reservations, of which 3.2 million were via Mews Kiosk."
+  },
+  {
+    id: 107, category: "Mews Growth & Funding",
+    q: "What total transaction volume did the Mews platform process in 2025?",
+    options: ["$5.3 billion", "$10 billion", "$14.2 billion", "$19.7 billion"],
+    answer: 3,
+    explanation: "The Mews platform processed $19.7 billion in platform transaction volumes in 2025, reflecting the scale of embedded payments across the customer base."
+  },
+  {
+    id: 108, category: "Mews Growth & Funding",
+    q: "How much additional revenue did Mews Spaces generate for hoteliers in 2025?",
+    options: ["$150 million", "$280 million", "$537 million", "$750 million"],
+    answer: 2,
+    explanation: "Mews Spaces created over $537 million in additional revenue for hoteliers in 2025, powered by over two million non-room reservations."
+  },
+  {
+    id: 109, category: "Mews Growth & Funding",
+    q: "How many employees did Mews have at the start of 2024, and at year end?",
+    options: ["500 at start, 750 at end", "750 at start, 934 at end", "934 at start, 1,217 at end", "1,217 at start, 1,500 at end"],
+    answer: 2,
+    explanation: "Mews began 2024 with 934 employees and ended with 1,217 — strong headcount growth reflecting the company's rapid scaling."
+  },
+  {
+    id: 110, category: "Mews Growth & Funding",
+    q: "What recognition has Mews received from HotelTechReport three years in a row?",
+    options: ["Best Hospitality AI Platform", "Best Customer Support in Hotel Tech", "Best Property Management System (2024, 2025, 2026)", "Fastest Growing Hotel Tech Company"],
+    answer: 2,
+    explanation: "Mews was named Best PMS (Property Management System) at the HotelTechAwards for 2024, 2025, and 2026 — three consecutive years."
+  },
+  {
+    id: 111, category: "Mews Growth & Funding",
+    q: "What notable company milestone did Mews officially achieve in 2024?",
+    options: ["Going public on the Amsterdam Stock Exchange", "Reaching unicorn status with a valuation over $1.2 billion", "Acquiring a major hotel chain as a customer", "Launching operations in 100 countries"],
+    answer: 1,
+    explanation: "In 2024 Mews officially became a unicorn after raising $110M, reaching a valuation of over $1.2 billion — an important milestone for the company."
+  },
+
+  // ── CUSTOMER ONBOARDING & DEPLOYMENT ──────────────────────────────────────
+];
+
+let queue=[],missedIds=[],correctIds=[],seenIds=[],currentQ=null,answered=false,history=[],historyPos=-1;
+
+function initQueue(){queue=shuffle([...ALL_QUESTIONS.map(q=>q.id)]);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function getQ(id){return ALL_QUESTIONS.find(q=>q.id===id);}
+
+function nextQuestion(){
+  if(queue.length===0&&missedIds.length>0){queue=shuffle([...missedIds]);missedIds=[];showRoundComplete();return;}
+  if(queue.length===0&&missedIds.length===0){showFinalResult();return;}
+  const id=queue.shift();currentQ=getQ(id);
+  answered=false;
+  history.push({q:currentQ,answeredIdx:null});historyPos=-1;
+  renderQuestion(currentQ,false,null);updateStats();
+}
+
+function renderQuestion(q,readonly,selectedIdx){
+  const isLive=!readonly;
+  const html=`
+    <div class="category-badge">${q.category}</div>
+    <div class="question-card">
+      <div class="question-num">Question #${q.id}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">${q.options.map((opt,i)=>{
+        let cls='';
+        if(readonly&&selectedIdx!==null&&selectedIdx!==undefined){
+          if(i===selectedIdx&&selectedIdx===q.answer)cls='correct disabled';
+          else if(i===selectedIdx&&selectedIdx!==q.answer)cls='wrong disabled';
+          else if(i===q.answer)cls='reveal-correct disabled';
+          else cls='disabled';
+        }
+        const click=(!readonly)?`onclick="selectAnswer(${i})"`:'' ;
+        return `<button class="option ${cls}" ${click}>${opt}</button>`;
+      }).join('')}</div>
+      ${readonly&&selectedIdx!==null&&selectedIdx!==undefined?`
+        <div class="feedback ${selectedIdx===q.answer?'correct':'wrong'} show">
+          <strong>${selectedIdx===q.answer?'✓ Correct!':'✗ Not quite.'}</strong> ${q.explanation}
+        </div>`:`<div class="feedback" id="feedback"></div>`}
+      ${isLive?`<button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question →</button>`:''}
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goPrev()" ${history.length<=1?'disabled':''}>← Previous</button>
+      <button class="nav-btn" onclick="goNext()" ${historyPos===-1?'disabled':''}>Next →</button>
+    </div>`;
+  document.getElementById('quiz-content').innerHTML=html;
+}
+
+function selectAnswer(idx){
+  if(answered)return;answered=true;
+  if(!seenIds.includes(currentQ.id))seenIds.push(currentQ.id);
+  const q=currentQ;
+  document.querySelectorAll('.option').forEach(o=>o.classList.add('disabled'));
+  const fb=document.getElementById('feedback'),nb=document.getElementById('next-btn');
+  if(idx===q.answer){
+    document.querySelectorAll('.option')[idx].classList.add('correct');
+    fb.className='feedback correct show';fb.innerHTML=`<strong>✓ Correct!</strong> ${q.explanation}`;
+    if(!correctIds.includes(q.id))correctIds.push(q.id);
+    missedIds=missedIds.filter(id=>id!==q.id);
+  }else{
+    document.querySelectorAll('.option')[idx].classList.add('wrong');
+    document.querySelectorAll('.option')[q.answer].classList.add('reveal-correct');
+    fb.className='feedback wrong show';fb.innerHTML=`<strong>✗ Not quite.</strong> ${q.explanation}`;
+    if(!missedIds.includes(q.id))missedIds.push(q.id);
+    correctIds=correctIds.filter(id=>id!==q.id);
+  }
+  if(history.length>0)history[history.length-1].answeredIdx=idx;
+  nb.classList.add('show');updateStats();
+}
+
+function goPrev(){
+  const liveIdx=history.length-1,curIdx=historyPos===-1?liveIdx:historyPos;
+  if(curIdx<=0)return;
+  historyPos=curIdx-1;
+  const e=history[historyPos];renderQuestion(e.q,true,e.answeredIdx);
+}
+
+function goNext(){
+  if(historyPos===-1)return;
+  const liveIdx=history.length-1;
+  if(historyPos>=liveIdx){
+    historyPos=-1;renderQuestion(currentQ,!answered,answered?history[liveIdx].answeredIdx:null);
+    if(answered){const nb=document.getElementById('next-btn');if(nb)nb.classList.add('show');}
+    return;
+  }
+  historyPos++;
+  const e=history[historyPos],isLive=historyPos===liveIdx;
+  if(isLive)historyPos=-1;
+  renderQuestion(e.q,isLive?!answered:true,e.answeredIdx);
+  if(isLive&&answered){const nb=document.getElementById('next-btn');if(nb)nb.classList.add('show');}
+}
+
+function updateStats(){
+  document.getElementById('stat-answered').textContent=seenIds.length;
+  document.getElementById('stat-correct').textContent=correctIds.length;
+  document.getElementById('stat-missed').textContent=missedIds.length;
+  document.getElementById('stat-total').textContent=queue.length;
+  document.getElementById('progress-fill').style.width=(seenIds.length/ALL_QUESTIONS.length*100)+'%';
+}
+
+function showRoundComplete(){
+  const pct=Math.round((correctIds.length/seenIds.length)*100)||0;
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="results-card">
+      <div class="results-score">${pct}%</div>
+      <div class="results-label">Round Complete!</div>
+      <p style="color:#aaa;margin-top:10px;font-size:13px;">All questions seen once.<br>Now drilling what you missed!</p>
+      <div class="results-detail">
+        <div class="results-stat"><div class="num" style="color:#22c55e">${correctIds.length}</div><div class="lbl">Correct</div></div>
+        <div class="results-stat"><div class="num" style="color:#ef4444">${missedIds.length}</div><div class="lbl">Missed</div></div>
+      </div><br>
+      <button class="restart-btn" onclick="nextQuestion()">Retry Missed →</button>
+    </div>`;updateStats();
+}
+
+function showFinalResult(){
+  const pct=Math.round((correctIds.length/ALL_QUESTIONS.length)*100)||0;
+  const msg=pct===100?"🏆 Perfect!":pct>=80?"🎉 Excellent!":pct>=60?"👍 Good progress!":"📚 Keep studying!";
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="results-card">
+      <div class="results-score">${pct}%</div>
+      <div class="results-label">${msg}</div>
+      <div class="results-detail">
+        <div class="results-stat"><div class="num" style="color:#22c55e">${correctIds.length}</div><div class="lbl">Correct</div></div>
+        <div class="results-stat"><div class="num" style="color:#ef4444">${ALL_QUESTIONS.length-correctIds.length}</div><div class="lbl">Missed</div></div>
+        <div class="results-stat"><div class="num">${ALL_QUESTIONS.length}</div><div class="lbl">Total</div></div>
+      </div><br>
+      <button class="restart-btn" onclick="restartQuiz()">Start Fresh</button>
+      <button class="restart-btn secondary" onclick="switchToReview()">View Answers</button>
+    </div>`;
+}
+
+function switchToReview(){
+  showSection('review', document.querySelectorAll('.nav-tab')[1]);
+}
+
+function restartQuiz(){
+  queue=[];missedIds=[];correctIds=[];seenIds=[];currentQ=null;answered=false;history=[];historyPos=-1;
+  initQueue();nextQuestion();
+}
+
+let currentFilter='all';
+function showSection(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='review')renderReview(currentFilter);
+}
+
+function filterReview(filter,btn){
+  currentFilter=filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderReview(filter);
+}
+
+function renderReview(filter){
+  let qs=ALL_QUESTIONS;
+  if(filter==='missed')qs=ALL_QUESTIONS.filter(q=>missedIds.includes(q.id));
+  else if(filter==='correct')qs=ALL_QUESTIONS.filter(q=>correctIds.includes(q.id));
+  else if(filter==='unseen')qs=ALL_QUESTIONS.filter(q=>!seenIds.includes(q.id));
+  const list=document.getElementById('review-list');
+  if(qs.length===0){list.innerHTML='<div class="empty-state">No questions in this filter yet.</div>';return;}
+  list.innerHTML=qs.map(q=>{
+    let lbl='Not yet seen',cls='unseen';
+    if(correctIds.includes(q.id)){lbl='✓ Got it right';cls='seen';}
+    else if(missedIds.includes(q.id)){lbl='✗ Needs review';cls='missed';}
+    else if(seenIds.includes(q.id)){lbl='Seen';cls='seen';}
+    return `<div class="review-item"><div class="r-cat">${q.category}</div><div class="r-q">${q.q}</div><div class="r-a">${q.options[q.answer]}</div><div class="r-status ${cls}">${lbl}</div></div>`;
+  }).join('');
+}
+
+initQueue();nextQuestion();
+</script>
+</body>
+</html>

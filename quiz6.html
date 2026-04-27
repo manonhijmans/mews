@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz 6 — Customer Operations</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; }
+  .header { background: #1a1a1a; border-bottom: 1px solid #2a2a2a; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 12px; flex-wrap: wrap; }
+  .logo { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+  .logo-accent { color: #ec4899; }
+  .back-btn { padding: 7px 14px; border-radius: 16px; border: 1.5px solid #2a2a2a; background: #1a1a1a; color: #aaa; cursor: pointer; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s; white-space: nowrap; }
+  .back-btn:hover { border-color: #ec4899; color: #ec4899; }
+  .nav-tabs { display: flex; gap: 8px; }
+  .nav-tab { padding: 7px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; background: #2a2a2a; color: #aaa; }
+  .nav-tab.active { background: #ec4899; color: #fff; }
+  .nav-tab:hover:not(.active) { background: #3a3a3a; color: #fff; }
+  .section { display: none; padding: 24px 20px; max-width: 720px; margin: 0 auto; }
+  .section.active { display: block; }
+  .progress-bar { background: #2a2a2a; border-radius: 8px; height: 5px; margin-bottom: 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #ec4899; border-radius: 8px; transition: width 0.4s ease; }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 9px 14px; flex: 1; min-width: 80px; text-align: center; }
+  .stat-num { font-size: 18px; font-weight: 700; color: #ec4899; }
+  .stat-label { font-size: 10px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .category-badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-bottom: 12px; background: #1a1a2e; color: #ec4899; border: 1px solid #2a2a3e; }
+  .question-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .question-num { font-size: 11px; color: #666; margin-bottom: 8px; }
+  .question-text { font-size: 17px; font-weight: 500; line-height: 1.5; color: #f0f0f0; }
+  .options { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
+  .option { padding: 12px 16px; border-radius: 9px; border: 1.5px solid #2a2a2a; cursor: pointer; font-size: 14px; transition: all 0.15s; background: #141414; color: #ddd; text-align: left; }
+  .option:hover:not(.disabled) { border-color: #ec4899; background: #1a1020; color: #fff; }
+  .option.correct { border-color: #22c55e; background: #0f2a1a; color: #86efac; }
+  .option.wrong { border-color: #ef4444; background: #2a0f0f; color: #fca5a5; }
+  .option.reveal-correct { border-color: #22c55e; background: #0f2a1a; color: #86efac; }
+  .option.disabled { cursor: default; }
+  .feedback { padding: 12px 16px; border-radius: 9px; margin-top: 10px; font-size: 13px; line-height: 1.5; display: none; }
+  .feedback.correct { background: #0f2a1a; border: 1px solid #22c55e; color: #86efac; }
+  .feedback.wrong { background: #2a0f0f; border: 1px solid #ef4444; color: #fca5a5; }
+  .feedback.show { display: block; }
+  .next-btn { width: 100%; padding: 12px; border-radius: 9px; border: none; cursor: pointer; font-size: 15px; font-weight: 600; background: #ec4899; color: #fff; margin-top: 12px; display: none; transition: opacity 0.2s; }
+  .next-btn:hover { opacity: 0.85; }
+  .next-btn.show { display: block; }
+  .nav-btns { display: flex; gap: 10px; margin-top: 10px; }
+  .nav-btn { flex: 1; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #2a2a2a; cursor: pointer; font-size: 13px; font-weight: 500; background: #1a1a1a; color: #aaa; transition: all 0.2s; }
+  .nav-btn:hover:not(:disabled) { border-color: #ec4899; color: #ec4899; }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .results-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px; padding: 28px; text-align: center; margin-bottom: 20px; }
+  .results-score { font-size: 60px; font-weight: 800; color: #ec4899; }
+  .results-label { font-size: 16px; color: #aaa; margin-top: 6px; }
+  .results-detail { display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .results-stat { background: #141414; border-radius: 9px; padding: 10px 18px; }
+  .results-stat .num { font-size: 22px; font-weight: 700; }
+  .results-stat .lbl { font-size: 11px; color: #888; }
+  .restart-btn { padding: 12px 28px; border-radius: 9px; border: none; cursor: pointer; font-size: 15px; font-weight: 600; background: #ec4899; color: #fff; margin: 6px; }
+  .restart-btn.secondary { background: #2a2a2a; color: #ddd; }
+  .restart-btn:hover { opacity: 0.85; }
+  .review-filter { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn { padding: 5px 12px; border-radius: 14px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #aaa; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+  .filter-btn.active { background: #ec4899; border-color: #ec4899; color: #fff; }
+  .review-item { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 11px; padding: 16px; margin-bottom: 10px; }
+  .review-item .r-cat { font-size: 10px; color: #ec4899; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .review-item .r-q { font-size: 14px; color: #f0f0f0; font-weight: 500; margin-bottom: 7px; }
+  .review-item .r-a { font-size: 13px; color: #22c55e; display: flex; align-items: flex-start; gap: 5px; }
+  .review-item .r-a::before { content: '✓'; flex-shrink: 0; }
+  .review-item .r-status { font-size: 10px; margin-top: 7px; padding: 2px 7px; border-radius: 7px; display: inline-block; }
+  .r-status.missed { background: #2a0f0f; color: #fca5a5; }
+  .r-status.seen { background: #0f2a1a; color: #86efac; }
+  .r-status.unseen { background: #1a1a2a; color: #aaa; }
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .section-sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .empty-state { text-align: center; padding: 40px; color: #555; font-size: 14px; }
+  @media (max-width: 600px) { .header { padding: 12px; } .section { padding: 16px 14px; } .question-text { font-size: 15px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← All Quizzes</a>
+  <div class="logo"><span class="logo-accent">🤝</span> Customer Operations</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('quiz',this)">Quiz</button>
+    <button class="nav-tab" onclick="showSection('review',this)">Review</button>
+  </div>
+</div>
+
+<div id="quiz" class="section active">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="stat-answered">0</div><div class="stat-label">Answered</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">Correct</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-missed">0</div><div class="stat-label">Retry</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Left</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div id="quiz-content"></div>
+</div>
+
+<div id="review" class="section">
+  <div class="section-title">Review Answers</div>
+  <div class="section-sub">49 questions — Onboarding, support, CS & central ops</div>
+  <div class="review-filter">
+    <button class="filter-btn active" onclick="filterReview('all',this)">All</button>
+    <button class="filter-btn" onclick="filterReview('missed',this)">Missed</button>
+    <button class="filter-btn" onclick="filterReview('correct',this)">Got Right</button>
+    <button class="filter-btn" onclick="filterReview('unseen',this)">Not Seen</button>
+  </div>
+  <div id="review-list"></div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  {
+    id: 112, category: "Customer Onboarding",
+    q: "What is the fastest go-live time Mews claims for new customers after 2025 onboarding improvements?",
+    options: ["2 days", "1 week", "2 weeks", "30 days"],
+    answer: 1,
+    explanation: "After major 2025 onboarding investments, Mews can now get hotels live in as little as a week using pre-configured templates and guided setup."
+  },
+  {
+    id: 113, category: "Customer Onboarding",
+    q: "What real-world example did Mews give of a fast go-live in their 2026 onboarding announcement?",
+    options: ["A Paris hotel live in 3 days", "Roam Spokane live in 11 days", "A London chain live in 5 days", "A Barcelona hostel live in 7 days"],
+    answer: 1,
+    explanation: "Roam Spokane went live in just 11 days. Their VP of Operations called the onboarding process 'efficient, informative and genuinely fun', citing the onboarding dashboard as key to staying on track."
+  },
+  {
+    id: 114, category: "Customer Onboarding",
+    q: "What multi-property onboarding achievement did Outsite accomplish with Mews's help?",
+    options: ["20 properties in 5 countries in 60 days", "40 properties in 10 countries within 90 days", "100 properties in 15 countries in 6 months", "15 properties in 3 countries in 30 days"],
+    answer: 1,
+    explanation: "Outsite's CTO and Co-Founder stated: 'We automated onboarding across 40 properties in 10 countries within 90 days, with guidance from Mews's dedicated onboarding team.'"
+  },
+  {
+    id: 115, category: "Customer Onboarding",
+    q: "Who is Mews's SVP of Customer Experience and Delivery?",
+    options: ["Matt Welle", "Richard Valtr", "Manisha Athukorala", "Josef Starýchfojtů"],
+    answer: 2,
+    explanation: "Manisha Athukorala is SVP of Customer Experience and Delivery at Mews. She has been quoted extensively on Mews's onboarding philosophy: 'We built Mews onboarding around confidence, clarity, and support that never stops.'"
+  },
+  {
+    id: 116, category: "Customer Onboarding",
+    q: "What does Mews compare switching PMS systems to, historically — and what are they trying to change?",
+    options: ["A company merger — complex but manageable", "Open-heart surgery — continuous hotel operation makes it like major surgery; Mews aims to make it feel like setting up a new smartphone", "Moving house — painful but predictable", "A software update — easy in theory, hard in practice"],
+    answer: 1,
+    explanation: "Historically switching PMS has been compared to open-heart surgery. Mews's goal is to simplify onboarding so it feels as effortless as setting up a new smartphone."
+  },
+  {
+    id: 117, category: "Customer Onboarding",
+    q: "What does the Mews onboarding philosophy mean by 'support that does not stop at go-live'?",
+    options: ["Customers get a 30-day free support window", "Ongoing training, in-product guidance and 24/7 human support continue long after the hotel is live — not just during implementation", "A dedicated account manager for the first year only", "Quarterly business reviews for the first two years"],
+    answer: 1,
+    explanation: "Mews's onboarding is built around ongoing support: embedded guidance, Mews University access, ADA the AI assistant, and human support under three minutes — all available continuously, not just during setup."
+  },
+  {
+    id: 118, category: "Customer Onboarding",
+    q: "What is the Capterra finding about software adoption that makes hotel onboarding especially critical?",
+    options: ["80% of buyers become successful adopters", "60% of buyers become successful adopters", "Only about one in three buyers becomes a 'successful adopter' after purchase", "50% abandon new software within 6 months"],
+    answer: 2,
+    explanation: "Capterra research shows only about one in three buyers becomes a 'successful adopter' after purchase — which is why Mews invests so heavily in structured onboarding to beat this industry norm."
+  },
+  {
+    id: 119, category: "Customer Onboarding",
+    q: "What is Mews's POS onboarding timeline for new customers adopting Mews POS?",
+    options: ["1 week", "2 weeks", "4 weeks", "8 weeks"],
+    answer: 2,
+    explanation: "The Mews POS onboarding team works to a four-week timeline, closely monitoring customer workload to ensure a successful launch within that period."
+  },
+  {
+    id: 120, category: "Customer Onboarding",
+    q: "What year did Mews make onboarding a 'major strategic focus' with deliberate investment?",
+    options: ["2022", "2023", "2024", "2025"],
+    answer: 3,
+    explanation: "In 2025, onboarding became a major strategic focus for Mews, with deliberate investment to make it faster, smoother, and more supportive — resulting in record go-lives that year."
+  },
+
+  // ── CUSTOMER SUPPORT & SLA ────────────────────────────────────────────────,
+  {
+    id: 121, category: "Customer Support & SLA",
+    q: "What is ADA at Mews?",
+    options: ["A customer data analytics tool", "Mews's in-product AI assistant that resolves customer queries without needing human support", "An acronym for Atomize Data Architecture", "A billing automation feature"],
+    answer: 1,
+    explanation: "ADA is Mews's in-product AI support assistant. It resolves 90% of customer queries, while human support responds in under three minutes for the remaining cases."
+  },
+  {
+    id: 122, category: "Customer Support & SLA",
+    q: "What percentage of customer queries does ADA (Mews's AI assistant) resolve?",
+    options: ["60%", "75%", "90%", "95%"],
+    answer: 2,
+    explanation: "ADA resolves 90% of customer queries autonomously. This frees human support agents to focus on the 10% of complex issues that genuinely need human judgment."
+  },
+  {
+    id: 123, category: "Customer Support & SLA",
+    q: "How quickly does Mews guarantee human support response after 2025 improvements?",
+    options: ["Within 10 minutes", "Within 5 minutes", "Under 3 minutes", "Within 1 hour"],
+    answer: 2,
+    explanation: "After 2025 onboarding and support investments, Mews guarantees human support response in under three minutes — a significant improvement to the customer experience."
+  },
+  {
+    id: 124, category: "Customer Support & SLA",
+    q: "What uptime does Mews's SLA guarantee for partners, and what has actual performance averaged?",
+    options: ["99.5% guaranteed, 99.8% actual", "99.9% guaranteed, 99.97% actual", "99.95% guaranteed, 99.99% actual", "100% guaranteed, 99.95% actual"],
+    answer: 1,
+    explanation: "Mews's SLA guarantees 99.9% monthly uptime for partners, and in practice the platform has averaged 99.97% uptime over the past 12 months."
+  },
+  {
+    id: 125, category: "Customer Support & SLA",
+    q: "What are the three incident priority tiers in the Mews SLA?",
+    options: ["P1, P2, P3", "Critical, High Priority, and General", "Urgent, Standard, Low", "Red, Amber, Green"],
+    answer: 1,
+    explanation: "Mews distinguishes three incident types: Critical (system completely unavailable), High Priority, and General. Each has different guaranteed response and resolution times."
+  },
+  {
+    id: 126, category: "Customer Support & SLA",
+    q: "How quickly must Mews resolve a Critical support incident under its SLA?",
+    options: ["Within 1 hour", "Within 2 hours", "Within 6 hours", "Within 24 hours"],
+    answer: 2,
+    explanation: "Critical requests (full system unavailability) must be resolved within 6 hours from when the customer notifies Mews. This is the tightest SLA commitment."
+  },
+  {
+    id: 127, category: "Customer Support & SLA",
+    q: "How does Mews demonstrate transparency about its support quality publicly?",
+    options: ["Through quarterly reports published to customers only", "By publishing its SLA publicly on its website, including response times and satisfaction scores", "Via annual third-party audits only", "Through the HotelTechReport certification process only"],
+    answer: 1,
+    explanation: "Mews was the first PMS provider to publish its SLA publicly on its website — including response times and rolling satisfaction scores. This transparency was a deliberate industry-leading move."
+  },
+  {
+    id: 128, category: "Customer Support & SLA",
+    q: "Via which channel do customers submit support tickets to Mews's HelpDesk?",
+    options: ["By emailing support@mews.com", "Via app.mews.com after logging in", "Through the Mews Community forum only", "By calling the support phone line"],
+    answer: 1,
+    explanation: "Customers contact Mews's 24/7 HelpDesk by submitting a ticket via app.mews.com after logging in. Support is guaranteed in English."
+  },
+  {
+    id: 129, category: "Customer Support & SLA",
+    q: "What are Mews's two support package tiers?",
+    options: ["Basic and Enterprise", "Standard and Premium", "Essential and Professional", "Core and Advanced"],
+    answer: 1,
+    explanation: "Mews offers Standard and Premium support packages. The Standard Support package is provided to all partners under the SLA, with Premium available for additional needs."
+  },
+  {
+    id: 130, category: "Customer Support & SLA",
+    q: "What is the Mews Community?",
+    options: ["Mews's internal Slack workspace for employees", "A public forum and knowledge-sharing platform for Mews customers, onboarding teams, and hoteliers", "A loyalty program for hotel guests", "An event series for Mews partners"],
+    answer: 1,
+    explanation: "The Mews Community is a platform where customers and onboarding teams share knowledge, ask questions, post guides, and collaborate. It's part of Mews's broader support infrastructure."
+  },
+
+  // ── MEWS UNIVERSITY & TRAINING ────────────────────────────────────────────,
+  {
+    id: 131, category: "Mews University & Training",
+    q: "What is Mews University?",
+    options: ["An external hospitality degree program Mews sponsors", "A free flexible online training platform for hotel staff with video courses, certifications, and leaderboards", "A classroom-based training program in Amsterdam", "An internal Mews employee training system only"],
+    answer: 1,
+    explanation: "Mews University is a free, flexible online training platform for hotel staff. It features video courses, user-defined training paths, team leaderboards, and optional exams and certifications — all designed to help staff learn Mews on their own schedule."
+  },
+  {
+    id: 132, category: "Mews University & Training",
+    q: "What learning formats does Mews University offer to cater to different staff needs?",
+    options: ["Only written manuals and PDFs", "Live courses, interactive walkthroughs, hands-on practice, micro-learning, and in-product guidance", "Only one-on-one coaching sessions", "Video calls with Mews trainers only"],
+    answer: 1,
+    explanation: "Mews University offers a mix of learning styles: live courses, interactive walk-throughs, hands-on practice, micro-learning, and in-product guidance — designed for every role and experience level."
+  },
+  {
+    id: 133, category: "Mews University & Training",
+    q: "What is EDGE at Mews (internal culture)?",
+    options: ["An acronym for the company's engineering principles", "One day every month where every employee dedicates time to learning, exploring and building skills — quarterly it goes company-wide", "A performance review process", "The name of Mews's annual company conference"],
+    answer: 1,
+    explanation: "EDGE is Mews's internal learning initiative: one day every month for every employee (Mewser) to learn and grow. Quarterly it goes company-wide with collaborative sessions around a theme, such as AI EDGE Day."
+  },
+  {
+    id: 134, category: "Mews University & Training",
+    q: "What is 'task-based enablement' in the context of Mews onboarding training?",
+    options: ["Assigning support tickets to specific team members", "Embedded guidance and training built into actual hotel workflows so staff build confidence while doing real tasks from day one", "A task management module in the PMS", "A gamification system in Mews University"],
+    answer: 1,
+    explanation: "Task-based enablement means learning is embedded in real operational workflows — staff build confidence not in a classroom, but while performing actual hotel tasks from day one."
+  },
+  {
+    id: 135, category: "Mews University & Training",
+    q: "A hotel reviews manager gave Mews University this specific praise. What did they say it enables?",
+    options: ["It replaces all other training formats entirely", "It ensures all staff are trained to a very high level of understanding to confidently deal with daily processes", "It is only useful for front desk staff", "It automatically certifies staff after 30 days"],
+    answer: 1,
+    explanation: "A hotel reviews manager said: 'Mews University gives us that platform to make sure that all our staff are trained to a very high level of understanding to then be able to confidently deal with our daily processes.'"
+  },
+
+  // ── CUSTOMER SUCCESS (CS) ─────────────────────────────────────────────────,
+  {
+    id: 136, category: "Customer Success",
+    q: "What is the core purpose of a Customer Success team in a SaaS company like Mews?",
+    options: ["To handle all customer complaints", "To proactively ensure customers achieve their desired outcomes, driving adoption, preventing churn, and expanding revenue", "To sell new products to existing customers only", "To manage billing and renewals only"],
+    answer: 1,
+    explanation: "Customer Success is a proactive methodology ensuring customers achieve desired outcomes. CS teams own the post-sale relationship, measuring success through retention, expansion, and satisfaction metrics like NRR and NPS."
+  },
+  {
+    id: 137, category: "Customer Success",
+    q: "At Mews, what does a Customer Success Manager (CSM) do after a customer finishes onboarding?",
+    options: ["Handover to support and move on to the next customer", "Manage all aspects of the ongoing customer journey: adoption, expansion, renewal, relationship-building, and advocating the customer's voice internally", "Only handle contractual renewals once per year", "Focus purely on upselling new Mews products"],
+    answer: 1,
+    explanation: "A Mews CSM manages the full post-onboarding journey: adoption, expansion, renewal, strategic account plans, identifying growth opportunities, and driving long-term advocacy — never just a once-a-year touchpoint."
+  },
+  {
+    id: 138, category: "Customer Success",
+    q: "What does the Mews CSM job description mean by 'voice of the customer'?",
+    options: ["CSMs create customer testimonial videos", "CSMs represent customer needs, feedback, and challenges internally at Mews — ensuring the product and company prioritize what actually matters to hoteliers", "CSMs run customer focus groups", "CSMs manage the Mews reviews page"],
+    answer: 1,
+    explanation: "Being the 'voice of the customer' means CSMs represent and advocate for customer needs, goals, and feedback inside Mews — influencing product, support, and strategy on behalf of the hotels they serve."
+  },
+  {
+    id: 139, category: "Customer Success",
+    q: "What does it mean that Mews offers a 'dedicated customer success manager' to every customer?",
+    options: ["A different CSM is assigned for every support ticket", "Customers get a named, ongoing CSM relationship from day one onwards — whether they've been using Mews for 10 days or 10 years", "Enterprise customers only get a dedicated CSM", "A CSM is only assigned during the first 90 days"],
+    answer: 1,
+    explanation: "Mews commits to a dedicated CSM for every customer regardless of how long they've been on the platform — reinforcing the 'partnership not vendor' philosophy for long-term success."
+  },
+  {
+    id: 140, category: "Customer Success",
+    q: "What does NRR stand for and why is it the ultimate CS metric in SaaS?",
+    options: ["Net Retention Ratio — measures support ticket resolution", "Net Revenue Retention — measures how much revenue is retained from existing customers including expansion minus churn; values above 100% mean the base is growing", "New Revenue Rate — measures sales team performance", "Net Referral Rate — tracks how many customers refer others"],
+    answer: 1,
+    explanation: "NRR = Net Revenue Retention. Formula: (Starting ARR + Expansion - Churn) / Starting ARR. >110% = great, >120% = best-in-class. It's the ultimate CS metric because it shows whether your existing customer base is growing or shrinking."
+  },
+  {
+    id: 141, category: "Customer Success",
+    q: "What is ARR and why does it matter for a CS team?",
+    options: ["Average Response Rate from support tickets", "Annual Recurring Revenue — the predictable subscription revenue a business expects from existing contracts; CS teams protect and grow it through retention and expansion", "Account Renewal Rate — the percentage of accounts that renew", "Automated Revenue Reports — Mews's BI reporting tool"],
+    answer: 1,
+    explanation: "ARR = Annual Recurring Revenue. It's the expected predictable subscription revenue from active contracts. CS teams protect ARR by reducing churn and grow it by driving expansion and upsells."
+  },
+  {
+    id: 142, category: "Customer Success",
+    q: "What is 'expansion revenue' and why is it important for CS teams?",
+    options: ["Revenue from opening new offices in different markets", "Revenue generated from existing customers through upsells, cross-sells or adding more users/properties — reducing reliance on new customer acquisition alone", "Revenue from enterprise contracts only", "The difference between forecasted and actual revenue"],
+    answer: 1,
+    explanation: "Expansion revenue comes from existing customers growing their use of the product. For Mews, this could mean a hotel adding Spaces, Payments, or Atomize. Expansion ARR now accounts for ~40% of total new ARR across SaaS companies."
+  },
+  {
+    id: 143, category: "Customer Success",
+    q: "What is a 'customer health score' and what signals does it typically combine?",
+    options: ["A score based only on NPS survey results", "A composite score combining product usage, support ticket history, NPS/CSAT, engagement with CS, and contract indicators — used to identify at-risk accounts", "A score assigned by the CSM based on how much they like the customer", "A metric based only on payment history"],
+    answer: 1,
+    explanation: "A customer health score combines multiple signals: login/usage data, support ticket volume/severity, NPS/CSAT scores, CSM engagement quality, contract value, and renewal proximity — giving an early warning system for churn risk."
+  },
+  {
+    id: 144, category: "Customer Success",
+    q: "What is 'churn' in the context of a SaaS customer base?",
+    options: ["The process of upgrading customers to higher tiers", "When customers cancel or fail to renew — leading to lost revenue that must be replaced by new customers just to stay flat", "A term for support ticket escalations", "When customers switch from one Mews product to another"],
+    answer: 1,
+    explanation: "Churn is when customers cancel or don't renew. It directly reduces ARR and NRR. CS teams focus on preventing churn through proactive health monitoring, value realization, and timely intervention."
+  },
+  {
+    id: 145, category: "Customer Success",
+    q: "What is the 'land and expand' strategy relevant to Mews's CS team?",
+    options: ["Signing large enterprise contracts upfront", "Starting customers with a core product (e.g. PMS) and expanding over time into additional modules like Payments, Spaces, Atomize, and POS — growing ARR from within the customer base", "Expanding into new geographic markets", "Offering free trials before converting to paid"],
+    answer: 1,
+    explanation: "Land and expand means starting with a core commitment (PMS) and growing through adding products, properties, or users over time. For Mews, this could mean a customer going from PMS → PMS + Payments → + Atomize → + Spaces."
+  },
+
+  // ── CUSTOMER SUPPORT METRICS ──────────────────────────────────────────────,
+  {
+    id: 146, category: "Support & CS Metrics",
+    q: "What does CSAT stand for and what does it measure?",
+    options: ["Customer Satisfaction Score — measures happiness with a specific interaction or touchpoint, typically via a simple post-interaction survey", "Customer Support Automation Tool", "Channel Sales Attribution Tracking", "Churn and Satisfaction Analytics Tool"],
+    answer: 0,
+    explanation: "CSAT = Customer Satisfaction Score. It measures how satisfied a customer was with a specific interaction (e.g. a support call, onboarding session). Typically a 1–5 scale question: 'How satisfied were you with your experience?'"
+  },
+  {
+    id: 147, category: "Support & CS Metrics",
+    q: "What does NPS stand for and how is it calculated?",
+    options: ["Net Promoter Score — calculated as Promoters minus Detractors divided by total responses, yielding a score from -100 to +100", "New Product Score — how customers rate new features", "Net Performance Statistic — an operational KPI", "No Problems Submitted — a support metric"],
+    answer: 0,
+    explanation: "NPS = Net Promoter Score. Customers rate 0–10 likelihood to recommend. Promoters (9–10), Passives (7–8), Detractors (0–6). NPS = (Promoters% - Detractors%). Ranges from -100 to +100."
+  },
+  {
+    id: 148, category: "Support & CS Metrics",
+    q: "What is CES and why does it matter alongside CSAT and NPS?",
+    options: ["Customer Engagement Score — measures how often customers log in", "Customer Effort Score — measures how easy it was for a customer to get their issue resolved; low effort strongly correlates with loyalty and retention", "Contract Expansion Score — tracks upsell success", "Customer Escalation System — the ticket routing framework"],
+    answer: 1,
+    explanation: "CES = Customer Effort Score. It asks: 'How easy was it to resolve your issue?' Research shows that making experiences effortless strongly predicts customer loyalty. High effort = high churn risk."
+  },
+  {
+    id: 149, category: "Support & CS Metrics",
+    q: "What is FCR in support operations?",
+    options: ["Full Customer Reach — total addressable market contacted", "First Contact Resolution — the percentage of support issues resolved in the first interaction without needing follow-up or escalation", "Forecasted Churn Rate — an ARR prediction metric", "Feature Change Request — product feedback submitted by customers"],
+    answer: 1,
+    explanation: "FCR = First Contact Resolution. It measures how often a support issue is fully resolved in the first interaction. High FCR means less customer frustration, lower support costs, and better CSAT scores."
+  },
+  {
+    id: 150, category: "Support & CS Metrics",
+    q: "What is AHT in a customer support context?",
+    options: ["Annual Headcount Target for support teams", "Average Handle Time — the average duration of a support interaction from start to full resolution including wrap-up", "Automated Help Tool — AI-powered ticket routing", "Account Health Tracker — a CS reporting dashboard"],
+    answer: 1,
+    explanation: "AHT = Average Handle Time. It measures the average duration of support interactions (talk time + hold time + after-call work). Lower AHT with high CSAT indicates an efficient, effective support team."
+  },
+
+  // ── CENTRAL OPERATIONS CONCEPTS ──────────────────────────────────────────,
+  {
+    id: 151, category: "Central Operations",
+    q: "What is the primary goal of a Central Operations team in a SaaS company like Mews?",
+    options: ["Managing the company's office facilities", "Improving efficiency and optimizing the customer journey across customer success, support, and onboarding teams — acting as the connective tissue between them", "Only handling enterprise customer escalations", "Building internal software tools for the engineering team"],
+    answer: 1,
+    explanation: "Central Ops acts as the connective tissue across customer-facing teams. It identifies inefficiencies, builds scalable processes, optimizes tooling, and ensures a consistent, high-quality customer journey from first contact through long-term success."
+  },
+  {
+    id: 152, category: "Central Operations",
+    q: "What does 'time to value' mean in a customer onboarding context?",
+    options: ["How long it takes to close a sales deal", "How quickly a new customer starts experiencing meaningful ROI from the product after going live", "The time taken to process a customer invoice", "How long support takes to resolve a ticket"],
+    answer: 1,
+    explanation: "Time to value (TTV) is how quickly a customer achieves meaningful outcomes after implementation. Faster TTV = stronger retention, better NPS, and reduced churn risk. It's a key metric Mews improved significantly in 2025."
+  },
+  {
+    id: 153, category: "Central Operations",
+    q: "What is a 'playbook' in a CS or support operations context?",
+    options: ["A marketing brochure for new products", "A documented, standardized process for handling a specific scenario (e.g. a health score drop, renewal risk, onboarding delay) — ensuring consistent responses across the team", "A competitive analysis of rival PMS systems", "A technical integration guide for developers"],
+    answer: 1,
+    explanation: "A playbook is a documented, repeatable process. For example: 'When a customer's health score drops by 20 points, follow these exact steps.' Playbooks ensure every CSM responds consistently rather than improvising."
+  },
+  {
+    id: 154, category: "Central Operations",
+    q: "Why does Mews adopt a 'partnership not vendor' approach to customers rather than a traditional vendor relationship?",
+    options: ["Because it's cheaper to maintain than traditional support models", "Because meaningful change and long-term success require true collaboration — a vendor sells and moves on, a partner stays invested in outcomes long after go-live", "Because regulatory requirements demand it", "Because it's faster to onboard customers this way"],
+    answer: 1,
+    explanation: "Mews explicitly rejects the vendor-customer dynamic in favor of partnership. This means CSMs stay engaged long after implementation, helping hotels evolve and grow — not just get live and move on."
+  },
+  {
+    id: 155, category: "Central Operations",
+    q: "What does 'segmentation' mean in a customer success strategy, and why does it matter?",
+    options: ["Dividing the hotel market by geography only", "Grouping customers by ARR, product usage, or health score to deliver the right level of engagement (high-touch, low-touch, or tech-touch) — so CS resources are deployed where they'll have most impact", "Segmenting support tickets by category", "Splitting the CS team into sub-teams by language"],
+    answer: 1,
+    explanation: "CS segmentation means delivering the right engagement model to the right customers. Enterprise accounts may need high-touch CSM contact; SMB customers may be better served by tech-touch (automated) programs. One-size-fits-all doesn't work."
+  },
+  {
+    id: 156, category: "Central Operations",
+    q: "What is 'tech-touch' customer success?",
+    options: ["Support delivered via phone calls only", "Scalable, automated customer engagement using tools like in-app guides, email sequences, and AI — rather than direct CSM time — allowing success teams to serve many more customers efficiently", "Using touchscreen devices to deliver training", "Technical implementation support during onboarding"],
+    answer: 1,
+    explanation: "Tech-touch CS uses automation, in-app guidance, email campaigns, and AI tools to engage customers at scale without requiring direct CSM time on every interaction — crucial for managing large, lower-ARR customer segments."
+  },
+  {
+    id: 157, category: "Central Operations",
+    q: "What is 'proactive outreach' in customer success, and how does it differ from reactive support?",
+    options: ["They are the same thing", "Proactive outreach means reaching out to customers based on health signals before problems escalate — reactive support responds only after a customer reports an issue", "Proactive outreach is only for enterprise customers", "Reactive support is always better than proactive outreach"],
+    answer: 1,
+    explanation: "Reactive support waits for a problem report. Proactive outreach means the CSM or automated system detects a health risk (falling usage, missed training, poor CSAT) and reaches out before the customer churns or escalates."
+  },
+  {
+    id: 158, category: "Central Operations",
+    q: "What is a QBR in a customer success context?",
+    options: ["Quarterly Business Review — a structured meeting with key customer stakeholders to review performance, align on goals, and plan for the next quarter", "Quality Benchmark Rating — an internal Mews scoring system", "Quick Bug Report — a support ticket category", "Quarterly Billing Review — a finance process"],
+    answer: 0,
+    explanation: "QBR = Quarterly Business Review. CSMs use QBRs to review hotel performance with senior customer stakeholders, align on goals, share Mews roadmap updates, and identify expansion or risk signals — a core relationship-building touchpoint."
+  },
+  {
+    id: 159, category: "Central Operations",
+    q: "What does 'adoption' mean in CS terms, and why is it critical?",
+    options: ["When a hotel signs a contract with Mews", "The extent to which customers are actively using the product's features — low adoption is a leading indicator of churn even if the customer hasn't complained", "How quickly a hotel goes live", "The number of staff trained on Mews University"],
+    answer: 1,
+    explanation: "Adoption measures actual feature usage. A customer who signed up but uses only 20% of available functionality is at high churn risk — they haven't found value. CSMs track adoption to drive deeper engagement before it's too late."
+  },
+  {
+    id: 160, category: "Central Operations",
+    q: "What is the main difference between Customer Support and Customer Success?",
+    options: ["They are the same function with different names", "Support is reactive — solving problems customers report. Success is proactive — ensuring customers achieve goals, driving adoption, and growing the relationship before problems arise", "Support handles technical issues; Success handles billing only", "Support is for small customers; Success is for enterprise only"],
+    answer: 1,
+    explanation: "Support is fundamentally reactive: a customer has a problem and contacts support. CS is fundamentally proactive: CSMs monitor health, reach out before issues arise, and drive outcomes. Both are essential but serve different purposes in the customer journey."
+  }
+];
+
+let queue=[],missedIds=[],correctIds=[],seenIds=[],currentQ=null,answered=false,history=[],historyPos=-1;
+
+function initQueue(){queue=shuffle([...ALL_QUESTIONS.map(q=>q.id)]);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function getQ(id){return ALL_QUESTIONS.find(q=>q.id===id);}
+
+function nextQuestion(){
+  if(queue.length===0&&missedIds.length>0){queue=shuffle([...missedIds]);missedIds=[];showRoundComplete();return;}
+  if(queue.length===0&&missedIds.length===0){showFinalResult();return;}
+  const id=queue.shift();currentQ=getQ(id);
+  answered=false;
+  history.push({q:currentQ,answeredIdx:null});historyPos=-1;
+  renderQuestion(currentQ,false,null);updateStats();
+}
+
+function renderQuestion(q,readonly,selectedIdx){
+  const isLive=!readonly;
+  const html=`
+    <div class="category-badge">${q.category}</div>
+    <div class="question-card">
+      <div class="question-num">Question #${q.id}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">${q.options.map((opt,i)=>{
+        let cls='';
+        if(readonly&&selectedIdx!==null&&selectedIdx!==undefined){
+          if(i===selectedIdx&&selectedIdx===q.answer)cls='correct disabled';
+          else if(i===selectedIdx&&selectedIdx!==q.answer)cls='wrong disabled';
+          else if(i===q.answer)cls='reveal-correct disabled';
+          else cls='disabled';
+        }
+        const click=(!readonly)?`onclick="selectAnswer(${i})"`:'' ;
+        return `<button class="option ${cls}" ${click}>${opt}</button>`;
+      }).join('')}</div>
+      ${readonly&&selectedIdx!==null&&selectedIdx!==undefined?`
+        <div class="feedback ${selectedIdx===q.answer?'correct':'wrong'} show">
+          <strong>${selectedIdx===q.answer?'✓ Correct!':'✗ Not quite.'}</strong> ${q.explanation}
+        </div>`:`<div class="feedback" id="feedback"></div>`}
+      ${isLive?`<button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question →</button>`:''}
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goPrev()" ${history.length<=1?'disabled':''}>← Previous</button>
+      <button class="nav-btn" onclick="goNext()" ${historyPos===-1?'disabled':''}>Next →</button>
+    </div>`;
+  document.getElementById('quiz-content').innerHTML=html;
+}
+
+function selectAnswer(idx){
+  if(answered)return;answered=true;
+  if(!seenIds.includes(currentQ.id))seenIds.push(currentQ.id);
+  const q=currentQ;
+  document.querySelectorAll('.option').forEach(o=>o.classList.add('disabled'));
+  const fb=document.getElementById('feedback'),nb=document.getElementById('next-btn');
+  if(idx===q.answer){
+    document.querySelectorAll('.option')[idx].classList.add('correct');
+    fb.className='feedback correct show';fb.innerHTML=`<strong>✓ Correct!</strong> ${q.explanation}`;
+    if(!correctIds.includes(q.id))correctIds.push(q.id);
+    missedIds=missedIds.filter(id=>id!==q.id);
+  }else{
+    document.querySelectorAll('.option')[idx].classList.add('wrong');
+    document.querySelectorAll('.option')[q.answer].classList.add('reveal-correct');
+    fb.className='feedback wrong show';fb.innerHTML=`<strong>✗ Not quite.</strong> ${q.explanation}`;
+    if(!missedIds.includes(q.id))missedIds.push(q.id);
+    correctIds=correctIds.filter(id=>id!==q.id);
+  }
+  if(history.length>0)history[history.length-1].answeredIdx=idx;
+  nb.classList.add('show');updateStats();
+}
+
+function goPrev(){
+  const liveIdx=history.length-1,curIdx=historyPos===-1?liveIdx:historyPos;
+  if(curIdx<=0)return;
+  historyPos=curIdx-1;
+  const e=history[historyPos];renderQuestion(e.q,true,e.answeredIdx);
+}
+
+function goNext(){
+  if(historyPos===-1)return;
+  const liveIdx=history.length-1;
+  if(historyPos>=liveIdx){
+    historyPos=-1;renderQuestion(currentQ,!answered,answered?history[liveIdx].answeredIdx:null);
+    if(answered){const nb=document.getElementById('next-btn');if(nb)nb.classList.add('show');}
+    return;
+  }
+  historyPos++;
+  const e=history[historyPos],isLive=historyPos===liveIdx;
+  if(isLive)historyPos=-1;
+  renderQuestion(e.q,isLive?!answered:true,e.answeredIdx);
+  if(isLive&&answered){const nb=document.getElementById('next-btn');if(nb)nb.classList.add('show');}
+}
+
+function updateStats(){
+  document.getElementById('stat-answered').textContent=seenIds.length;
+  document.getElementById('stat-correct').textContent=correctIds.length;
+  document.getElementById('stat-missed').textContent=missedIds.length;
+  document.getElementById('stat-total').textContent=queue.length;
+  document.getElementById('progress-fill').style.width=(seenIds.length/ALL_QUESTIONS.length*100)+'%';
+}
+
+function showRoundComplete(){
+  const pct=Math.round((correctIds.length/seenIds.length)*100)||0;
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="results-card">
+      <div class="results-score">${pct}%</div>
+      <div class="results-label">Round Complete!</div>
+      <p style="color:#aaa;margin-top:10px;font-size:13px;">All questions seen once.<br>Now drilling what you missed!</p>
+      <div class="results-detail">
+        <div class="results-stat"><div class="num" style="color:#22c55e">${correctIds.length}</div><div class="lbl">Correct</div></div>
+        <div class="results-stat"><div class="num" style="color:#ef4444">${missedIds.length}</div><div class="lbl">Missed</div></div>
+      </div><br>
+      <button class="restart-btn" onclick="nextQuestion()">Retry Missed →</button>
+    </div>`;updateStats();
+}
+
+function showFinalResult(){
+  const pct=Math.round((correctIds.length/ALL_QUESTIONS.length)*100)||0;
+  const msg=pct===100?"🏆 Perfect!":pct>=80?"🎉 Excellent!":pct>=60?"👍 Good progress!":"📚 Keep studying!";
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="results-card">
+      <div class="results-score">${pct}%</div>
+      <div class="results-label">${msg}</div>
+      <div class="results-detail">
+        <div class="results-stat"><div class="num" style="color:#22c55e">${correctIds.length}</div><div class="lbl">Correct</div></div>
+        <div class="results-stat"><div class="num" style="color:#ef4444">${ALL_QUESTIONS.length-correctIds.length}</div><div class="lbl">Missed</div></div>
+        <div class="results-stat"><div class="num">${ALL_QUESTIONS.length}</div><div class="lbl">Total</div></div>
+      </div><br>
+      <button class="restart-btn" onclick="restartQuiz()">Start Fresh</button>
+      <button class="restart-btn secondary" onclick="switchToReview()">View Answers</button>
+    </div>`;
+}
+
+function switchToReview(){
+  showSection('review', document.querySelectorAll('.nav-tab')[1]);
+}
+
+function restartQuiz(){
+  queue=[];missedIds=[];correctIds=[];seenIds=[];currentQ=null;answered=false;history=[];historyPos=-1;
+  initQueue();nextQuestion();
+}
+
+let currentFilter='all';
+function showSection(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='review')renderReview(currentFilter);
+}
+
+function filterReview(filter,btn){
+  currentFilter=filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderReview(filter);
+}
+
+function renderReview(filter){
+  let qs=ALL_QUESTIONS;
+  if(filter==='missed')qs=ALL_QUESTIONS.filter(q=>missedIds.includes(q.id));
+  else if(filter==='correct')qs=ALL_QUESTIONS.filter(q=>correctIds.includes(q.id));
+  else if(filter==='unseen')qs=ALL_QUESTIONS.filter(q=>!seenIds.includes(q.id));
+  const list=document.getElementById('review-list');
+  if(qs.length===0){list.innerHTML='<div class="empty-state">No questions in this filter yet.</div>';return;}
+  list.innerHTML=qs.map(q=>{
+    let lbl='Not yet seen',cls='unseen';
+    if(correctIds.includes(q.id)){lbl='✓ Got it right';cls='seen';}
+    else if(missedIds.includes(q.id)){lbl='✗ Needs review';cls='missed';}
+    else if(seenIds.includes(q.id)){lbl='Seen';cls='seen';}
+    return `<div class="review-item"><div class="r-cat">${q.category}</div><div class="r-q">${q.q}</div><div class="r-a">${q.options[q.answer]}</div><div class="r-status ${cls}">${lbl}</div></div>`;
+  }).join('');
+}
+
+initQueue();nextQuestion();
+</script>
+</body>
+</html>
